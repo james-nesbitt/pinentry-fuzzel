@@ -1,0 +1,75 @@
+#!/bin/sh
+
+ENABLE_LOGGING="TRUE"
+logger() {
+    if [ "$ENABLE_LOGGING" == "TRUE" ]; then
+        /usr/bin/logger -t "${0} [$$]" "$@";
+    fi
+}
+
+# Base command and misc variables
+DESC=""
+PROMPT=""
+
+echo "OK Please go ahead"
+while read cmd rest; do
+    logger "RAW=< ${cmd} ${rest} >"
+    logger "cmd=<${cmd}> rest=<${rest}>"
+
+    case $cmd in
+        GETINFO)
+            case "$rest" in
+                flavor)
+                    echo "D fuzzel"
+                    echo "OK"
+                    ;;
+                version)
+                    echo "D 0.1"
+                    echo "OK"
+                    ;;
+                ttyinfo)
+                    echo "D - - -"
+                    echo "OK"
+                    ;;
+                pid)
+                    echo "D $$"
+                    echo "OK"
+                    ;;
+            esac
+            ;;
+
+        SETDESC)
+            DESC=$rest
+            echo "OK"
+            ;;
+
+        SETERROR)
+            logger "ERROR $rest"
+            fuzzel --prompt-only "${rest}" --cache /dev/null --password --dmenu
+            echo "OK"
+	    exit 1 
+	    ;;
+
+        SETPROMPT)
+            PROMPT="${rest}"
+            echo "OK"
+            ;;
+
+        GETPIN | getpin)
+            echo "D $(fuzzel --prompt-only "${DESC}" --placeholder="${PROMPT}: " --cache /dev/null --password --dmenu)"
+            # echo "D $(fuzzel --prompt-only "${DESC#"Please enter the passphrase to unlock the OpenPGP secret key:"}"  "${DESC}" --placeholder="${PROMPT}: " --cache /dev/null --password --dmenu)"
+            echo "OK"
+            ;;
+
+        BYE|bye)
+            echo "OK closing connection"
+            logger "EXITING"
+            exit 0
+            ;;
+
+        *)
+            echo "OK"
+            ;;
+        esac
+done
+
